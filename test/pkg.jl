@@ -421,12 +421,11 @@ temp_pkg_dir() do project_path
 end
 
 temp_pkg_dir() do project_path; cd(project_path) do
+    tmp = mktempdir()
+    cd(tmp)
+    depo1 = mktempdir()
+    depo2 = mktempdir()
     @testset "instantiating updated repo" begin
-        tmp = mktempdir()
-        cd(tmp)
-        depo1 = mktempdir()
-        depo2 = mktempdir()
-
         empty!(DEPOT_PATH)
         pushfirst!(DEPOT_PATH, depo1)
         LibGit2.close(LibGit2.clone("https://github.com/JuliaLang/Example.jl", "Example.jl"))
@@ -463,6 +462,7 @@ temp_pkg_dir() do project_path; cd(project_path) do
         Pkg.activate(".")
         Pkg.instantiate()
     end
+    Base.rm.([tmp, depo1, depo2]; force = true, recursive = true)
 end end
 
 temp_pkg_dir() do project_path
