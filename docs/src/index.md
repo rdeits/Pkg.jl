@@ -1,6 +1,4 @@
-# Pkg
-
-## Introduction
+# **1.** Introduction
 
 Pkg is the standard package manager for Julia 1.0 and newer. Unlike traditional
 package managers, which install and manage a single global set of packages, Pkg
@@ -51,151 +49,11 @@ upstream patch to be accepted and published. Once an official fix is published,
 however, you can just upgrade your dependencies and you'll be back on an
 official release again.
 
-## Glossary
-
-**Project:** a source tree with a standard layout, including a `src` directory
-for the main body of Julia code, a `test` directory for testing the project,
-`docs` for documentation files, and optionally a `deps` directory for a build
-script and its outputs. A project will typically also have a project file and
-may optionally have a manifest file:
-
-- **Project file:** a file in the root directory of a project, named
-  `Project.toml` (or `JuliaProject.toml`) describing metadata about the project,
-  including its name, UUID (for packages), authors, license, and the names and
-  UUIDs of packages and libraries that it depends on.
-
-- **Manifest file:** a file in the root directory of a project, named
-  `Manifest.toml` (or `JuliaManifest.toml`) describing a complete dependency graph
-  and exact versions of each package and library used by a project.
-
-**Package:** a project which provides reusable functionality that can be used by
-other Julia projects via `import X` or `using X`. A package should have a
-project file with a `uuid` entry giving its package UUID. This UUID is used to
-identify the package in projects that depend on it.
-
-!!! note
-    For legacy reasons it is possible to load a package without a project file or
-    UUID from the REPL or the top-level of a script. It is not possible, however,
-    to load a package without a project file or UUID from a project with them. Once
-    you've loaded from a project file, everything needs a project file and UUID.
-
-**Application:** a project which provides standalone functionality not intended
-to be reused by other Julia projects. For example a web application or a
-commmand-line utility, or simulation/analytics code accompanying a scientific paper.
-An application may have a UUID but does not need one.
-An application may also provide global configuration options for packages it
-depends on. Packages, on the other hand, may not provide global configuration
-since that could conflict with the configuration of the main application.
-
-!!! note
-    **Projects _vs._ Packages _vs._ Applications:**
-
-    1. **Project** is an umbrella term: packages and applications are kinds of projects.
-    2. **Packages** should have UUIDs, applications can have a UUIDs but don't need them.
-    3. **Applications** can provide global configuration, whereas packages cannot.
-
-**Library (future work):** a compiled binary dependency (not written in Julia)
-packaged to be used by a Julia project. These are currently typically built in-
-place by a `deps/build.jl` script in a project’s source tree, but in the future
-we plan to make libraries first-class entities directly installed and upgraded
-by the package manager.
-
-**Environment:** the combination of the top-level name map provided by a project
-file combined with the dependency graph and map from packages to their entry points
-provided by a manifest file. For more detail see the manual section on code loading.
-
-- **Explicit environment:** an environment in the form of an explicit project
-  file and an optional corresponding manifest file together in a directory. If the
-  manifest file is absent then the implied dependency graph and location maps are
-  empty.
-
-- **Implicit environment:** an environment provided as a directory (without a
-  project file or manifest file) containing packages with entry points of the form
-  `X.jl`, `X.jl/src/X.jl` or `X/src/X.jl`. The top-level name map is implied by
-  these entry points. The dependency graph is implied by the existence of project
-  files inside of these package directories, e.g. `X.jl/Project.toml` or
-  `X/Project.toml`. The dependencies of the `X` package are the dependencies in
-  the corresponding project file if there is one. The location map is implied by
-  the entry points themselves.
-
-**Registry:** a source tree with a standard layout recording metadata about a
-registered set of packages, the tagged versions of them which are available, and
-which versions of packages are compatible or incompatible with each other. A
-registry is indexed by package name and UUID, and has a directory for each
-registered package providing the following metadata about it:
-
-- name – e.g. `DataFrames`
-- UUID – e.g. `a93c6f00-e57d-5684-b7b6-d8193f3e46c0`
-- authors – e.g. `Jane Q. Developer <jane@example.com>`
-- license – e.g. MIT, BSD3, or GPLv2
-- repository – e.g. `https://github.com/JuliaData/DataFrames.jl.git`
-- description – a block of text summarizing the functionality of a package
-- keywords – e.g. `data`, `tabular`, `analysis`, `statistics`
-- versions – a list of all registered version tags
-
-For each registered version of a package, the following information is provided:
-
-- its semantic version number – e.g. `v1.2.3`
-- its git tree SHA-1 hash – e.g. `7ffb18ea3245ef98e368b02b81e8a86543a11103`
-- a map from names to UUIDs of dependencies
-- which versions of other packages it is compatible/incompatible with
-
-Dependencies and compatibility are stored in a compressed but human-readable
-format using ranges of package versions.
-
-**Depot:** a directory on a system where various package-related resources live,
-including:
-
-- `environments`: shared named environments (e.g. `v1.0`, `devtools`)
-- `clones`: bare clones of package repositories
-- `compiled`: cached compiled package images (`.ji` files)
-- `config`: global configuration files (e.g. `startup.jl`)
-- `dev`: default directory for package development
-- `logs`: log files (e.g. `manifest_usage.toml`, `repl_history.jl`)
-- `packages`: installed package versions
-- `registries`: clones of registries (e.g. `General`)
-
-**Load path:** a stack of environments where package identities, their
-dependencies, and entry-points are searched for. The load path is controlled in
-Julia by the `LOAD_PATH` global variable which is populated at startup based on
-the value of the `JULIA_LOAD_PATH` environment variable. The first entry is your
-primary environment, often the current project, while later entries provide
-additional packages one may want to use from the REPL or top-level scripts.
-
-**Depot path:** a stack of depot locations where the package manager, as well as
-Julia's code loading mechanisms, look for registries, installed packages, named
-environments, repo clones, cached compiled package images, and configuration
-files. The depot path is controlled by the Julia `DEPOT_PATH` global variable
-which is populated at startup based on the value of the `JULIA_DEPOT_PATH`
-environment variable. The first entry is the “user depot” and should be writable
-by and owned by the current user. The user depot is where: registries are
-cloned, new package versions are installed, named environments are created and
-updated, package repos are cloned, newly compiled package image files are saved,
-log files are written, development packages are checked out by default, and
-global configuration data is saved. Later entries in the depot path are treated
-as read-only and are appropriate for registries, packages, etc. installed and
-managed by system administrators.
-
 ## Getting Started
 
-The Pkg REPL-mode is entered from the Julia REPL using the key `]`.
-
-```
-(v1.0) pkg>
-```
-
-The part inside the parenthesis of the prompt shows the name of the current project.
-Since we haven't created our own project yet, we are in the default project, located at `~/.julia/environments/v1.0`
-(or whatever version of Julia you happen to run).
-
-To return to the `julia>` prompt, either press backspace when the input line is empty or press Ctrl+C.
-Help is available by calling `pkg> help`.
 If you are in an environment that does not have access to a REPL you can still use the REPL mode commands using
 the string macro `pkg` available after `using Pkg`. The command `pkg"cmd"` would be equivalent to executing `cmd`
 in the REPL mode.
-
-The documentation here describes using Pkg from the REPL mode. Documentation of using
-the Pkg API (by calling `Pkg.` functions) is in progress of being written.
 
 ### Adding packages
 
@@ -722,75 +580,6 @@ using Test
    Testing HelloWorld tests passed```
 ```
 
-### Compatibility
-
-Compatibility refers to the ability to restrict what version of the dependencies that your project is compatible with.
-If the compatibility for a dependency is not given, the project is assumed to be compatible with all versions of that dependency.
-
-Compatibility for a dependency is entered in the `Project.toml` file as for example:
-
-```toml
-[compat]
-Example = "0.4.3"
-```
-
-After a compatibility entry is put into the project file, `up` can be used to apply it.
-
-The format of the version specifier is described in detail below.
-
-!!! info
-    There is currently no way to give compatibility from the Pkg REPL mode so for now, one has to manually edit the project file.
-
-#### Version specifier format
-
-Similar to other package managers, the Julia package manager respects [semantic versioning](https://semver.org/) (semver).
-As an example, a version specifier is given as e.g. `1.2.3` is therefore assumed to be compatible with the versions `[1.2.3 - 2.0.0)` where `)` is a non-inclusive upper bound.
-More specifically, a version specifier is either given as a **caret specifier**, e.g. `^1.2.3`  or a **tilde specifier** `~1.2.3`.
-Caret specifiers are the default and hence `1.2.3 == ^1.2.3`. The difference between a caret and tilde is described in the next section.
-The intersection of multiple version specifiers can be formed by comma separating indiviual version specifiers.
-
-##### Caret specifiers
-
-A caret specifier allows upgrade that would be compatible according to semver.
-An updated dependency is considered compatible if the new version does not modify the left-most non zero digit in the version specifier.
-
-Some examples are shown below.
-
-```
-^1.2.3 = [1.2.3, 2.0.0)
-^1.2 = [1.2.0, 2.0.0)
-^1 =  [1.0.0, 2.0.0)
-^0.2.3 = [0.2.3, 0.3.0)
-^0.0.3 = [0.0.3, 0.0.4)
-^0.0 = [0.0.0, 0.1.0)
-^0 = [0.0.0, 1.0.0)
-```
-
-While the semver specification says that all versions with a major version of 0 are incompatible with each other, we have made that choice that
-a version given as `0.a.b` is considered compatible with `0.a.c` if `a != 0` and  `c >= b`.
-
-##### Tilde specifiers
-
-A tilde specifier provides more limited upgrade possibilities. With a tilde, only the last specified digit is allowed to increment by one.
-This gives the following example.
-
-```
-~1.2.3 = [1.2.3, 1.2.4)
-~1.2 = [1.2.0, 1.3.0)
-~1 = [1.0.0, 2.0.0)
-```
-
-#### Inequality specifiers
-
-Inequalities can also be used to specify version ranges:
-
-```
->= 1.2.3 = [1.2.3,  ∞)
-≥ 1.2.3 = [1.2.3,  ∞)
-= 1.2.3 = [1.2.3, 1.2.3]
-< 1.2.3 = [0.0.0, 1.2.2]
-```
-
 
 ## Precompiling a project
 
@@ -833,29 +622,4 @@ Simply clone their project using e.g. `git clone`, `cd` to the project directory
 If the project contains a manifest, this will install the packages in the same state that is given by that manifest.
 Otherwise, it will resolve the latest versions of the dependencies compatible with the project.
 
-## References
 
-This section describes the "API mode" of interacting with Pkg.jl which is recommended for non-interactive usage,
-in i.e. scripts. In the REPL mode packages (with associated version, UUID, URL etc) are parsed from strings,
-for example, `"Package#master"`,`"Package@v0.1"`, `"www.mypkg.com/MyPkg#my/feature"`.
-It is possible to use strings as arguments for simple commands in the API mode (like `Pkg.add(["PackageA", "PackageB"])`,
-more complicated commands, that e.g. specify URLs or version range, uses a more structured format over strings.
-This is done by creating an instance of a [`PackageSpec`](@ref) which are passed in to functions.
-
-```@docs
-PackageSpec
-PackageMode
-UpgradeLevel
-Pkg.add
-Pkg.develop
-Pkg.activate
-Pkg.rm
-Pkg.update
-Pkg.test
-Pkg.build
-Pkg.pin
-Pkg.free
-Pkg.instantiate
-Pkg.resolve
-Pkg.setprotocol!
-```

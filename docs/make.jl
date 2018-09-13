@@ -8,7 +8,15 @@ makedocs(
     format = :html,
     sitename = "Pkg.jl",
     pages = Any[
-        "Pkg" => "index.md",
+        "index.md",
+        "getting-started.md",
+        "glossary.md",
+        "managing-packages.md",
+        "creating-packages.md",
+        "compatibility.md",
+        "registries.md",
+        "faq.md",
+        "api.md"
     ]
 )
 
